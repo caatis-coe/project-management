@@ -76,7 +76,9 @@ class Attachments extends Component implements HasForms, HasTable
             TextColumn::make('name')
                 ->label(__('Name'))
                 ->sortable()
-                ->searchable(),
+                ->searchable()
+                ->url(fn ($record) => $record->getUrl())
+                ->openUrlInNewTab(),
 
             TextColumn::make('human_readable_size')
                 ->label(__('Size'))
