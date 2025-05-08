@@ -237,7 +237,7 @@ class SprintsRelationManager extends RelationManager
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ])
-            ->defaultSort('id');
+            ->defaultSort('id', 'desc');
     }
 
     protected function canAttach(): bool
