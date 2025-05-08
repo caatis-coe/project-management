@@ -6,6 +6,7 @@ use App\Filament\Resources\TicketResource\Pages;
 use App\Filament\Resources\TicketResource\RelationManagers;
 use App\Models\Epic;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\Ticket;
 use App\Models\TicketPriority;
 use App\Models\TicketRelation;
@@ -112,14 +113,50 @@ class TicketResource extends Resource
                                 Forms\Components\Select::make('owner_id')
                                     ->label(__('Ticket owner'))
                                     ->searchable()
-                                    ->options(fn() => User::all()->pluck('name', 'id')->toArray())
+                                    ->options(function ($get) {
+                                        $projectId = $get('project_id');
+
+                                        if (!$projectId) {
+                                            return [$userId = auth()->user()->id => auth()->user()->name];
+                                        }
+
+                                        $owner = Project::find($projectId)?->owner_id;
+                                        $ownerName = User::find($owner)?->name;
+
+                                        $assignedUsers = ProjectUser::where('project_id', $projectId)
+                                            ->join('users', 'project_users.user_id', '=', 'users.id')
+                                            ->pluck('users.name', 'users.id')
+                                            ->toArray();
+
+                                        $ownerOption = [$owner => $ownerName];
+
+                                        return $ownerOption + $assignedUsers;
+                                    })
                                     ->default(fn() => auth()->user()->id)
                                     ->required(),
 
                                 Forms\Components\Select::make('responsible_id')
                                     ->label(__('Ticket responsible'))
                                     ->searchable()
-                                    ->options(fn() => User::all()->pluck('name', 'id')->toArray()),
+                                    ->options(function ($get) {
+                                        $projectId = $get('project_id');
+
+                                        if (!$projectId) {
+                                            return [];
+                                        }
+
+                                        $owner = Project::find($projectId)?->owner_id;
+                                        $ownerName = User::find($owner)?->name;
+
+                                        $assignedUsers = ProjectUser::where('project_id', $projectId)
+                                            ->join('users', 'project_users.user_id', '=', 'users.id')
+                                            ->pluck('users.name', 'users.id')
+                                            ->toArray();
+
+                                        $ownerOption = [$owner => $ownerName];
+
+                                        return $ownerOption + $assignedUsers;
+                                    }),
 
                                 Forms\Components\Grid::make()
                                     ->columns(3)
